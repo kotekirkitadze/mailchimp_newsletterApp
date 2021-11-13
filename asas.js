@@ -1,8 +1,13 @@
 const express = require('express');
+const request = require('request');
 const bodyParser = require('body-parser');
 const path = require('path');
-const fetch = require('node-fetch');
+
 const app = express();
+
+var Mailchimp = require('mailchimp-api-v3')
+
+var mailchimp = new Mailchimp('7413cb906976921ec8b6dcd2ef3e0e1a-us20');
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -23,7 +28,7 @@ app.post('/signup', (req, res) => {
         members: [
             {
                 email_address: email,
-                status: 'pending',
+                status: 'subscribed',
                 merge_fields: {
                     FNAME: firstName,
                     LNAME: lastName
@@ -36,29 +41,22 @@ app.post('/signup', (req, res) => {
 
     const options = {
         method: 'POST',
-        header: {
-            Authorization: 'auth 7413cb906976921ec8b6dcd2ef3e0e1a-us20'
-        },
         body: postData
     }
 
-    fetch('http://us20.api.mailchimp.com/3.0/lists/73a30f4e8c', options)
-        .then(
-            res.statusCode === 200 ? res.redirect('/success.html') :
-                res.redirect('/fail.html')
-        ).catch(err => console.log(err))
 
-    // request(options, (err, response, body) => {
-    //     if (err) {
-    //         res.redirect('/fail.html');
-    //     } else {
-    //         if (response.statusCode === 2000) {
-    //             res.redirect('/success.html');
-    //         } else {
-    //             res.redirect('/fail.html')
-    //         }
-    //     }
-    // });
+    mailchimp.request(options, (err, response, body) => {
+        if (err) {
+            res.redirect('/fail.html');
+        } else {
+            if (response.statusCode === 2000) {
+                res.redirect('/success.html');
+            } else {
+                res.redirect('/fail.html')
+            }
+        }
+    })
+
 })
 
 
